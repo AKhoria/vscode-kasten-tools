@@ -22,6 +22,14 @@
         "command": "kasten.addOpenArtifactWindow",
         "category": "Kasten",
         "title": "Add Artefact"
+      },
+      {
+        "command": "kasten.refreshEntry",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
     ],
     "views": {
@@ -29,6 +37,30 @@
         {
           "id": "kasten.view",
           "name": "Kasten objects"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "kasten.refreshEntry",
+          "when": "view == kasten.view",
+          "group": "navigation"
+        },
+        {
+          "command": "kasten.addEntry",
+          "when": "view == kasten.view"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "kasten.editEntry",
+          "when": "view == kasten.view && viewItem == dependency",
+          "group": "inline"
+        },
+        {
+          "command": "kasten.deleteEntry",
+          "when": "view == kasten.view && viewItem == dependency"
         }
       ]
     }
