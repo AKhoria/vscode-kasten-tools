@@ -30,10 +30,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		});
 		vscode.commands.registerCommand('kasten.addOpenArtifactWindow', addArtifactPallete(context));
 		vscode.commands.registerCommand('kasten.addArtifactByID', (id: string) => {
-			am.addRootItem(id);
+			am.addRootItems(id);
 			tree.refresh();
 
 		});
+		vscode.commands.registerCommand('kasten.addArtifactsByFilter', async ({ key, value }) => {
+			am.addFilter(key, value);
+			tree.refresh();
+		});
+
+
 
 		//TODO implement to make not dirty file explorer
 		//vscode.workspace.registerFileSystemProvider(K10S_RESOURCE_SCHEME, resourceDocProvider, { }),

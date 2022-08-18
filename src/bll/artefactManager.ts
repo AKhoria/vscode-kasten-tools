@@ -1,29 +1,65 @@
 import { K10Client } from '../api/restclient';
 import { ArtefactNode, LogicNode, Node, PolicyNode } from './node';
-
+import * as vscode from 'vscode';
 export class ArtefactManager {
     rootIds: string[];
+    filters: { key: string, value: string }[];
     constructor(private k10Client: K10Client) {
-        this.rootIds = ["734c5f9c-1e0b-11ed-942b-8a8fc1958bdc"];
+        this.rootIds = [];
+        this.filters = [];
     }
     async getRootItems(): Promise<Node[]> {
-        let arts = await Promise.all(this.rootIds.map(rootId => this.k10Client.getArtifactById(rootId)));
-        let artNodes = arts.map(rootArt => new ArtefactNode(this.k10Client, rootArt) as Node);
-        let policyNode = await this.getPolicies();
-        if (policyNode) {
-            artNodes = [policyNode, ...artNodes];
+        let res: Node[] = [];
+        await this.withExceptionNotification(async () => {
+            let arts = await Promise.all(this.rootIds.map(rootId => this.k10Client.getArtifactById(rootId)));
+            let artNodes = arts.map(rootArt => new ArtefactNode(this.k10Client, rootArt) as Node);
+            res = [...res, ...artNodes];
+        }, "Failed to get artifacts by ID");
+
+        await this.withExceptionNotification(async () => {
+            let policyNode = await this.getPolicy();
+            if (policyNode) {
+                res = [policyNode, ...res];
+            }
+        }, "Failed to get policies");
+
+        await this.withExceptionNotification(async () => {
+            if (this.filters.length > 0) {
+                let filteredNodes = (await Promise.all(this.filters.map(async ({ key, value }) => {
+                    let filteredArts = await this.k10Client.listArtifacts(key, value);
+                    return filteredArts.map(x => new ArtefactNode(this.k10Client, x) as Node);
+                }))).flatMap(x => x);
+                res = [...res, ...filteredNodes];
+            }
+        }, "Failed to get artifacts by filtering condition");
+
+        return res;
+    }
+
+    async getPolicy(): Promise<Node | null> {
+        try {
+            let policies = await this.k10Client.getPolicies();
+            let policyNodes = policies.map(x => new PolicyNode(this.k10Client, x));
+            return policyNodes.length > 0 ? new LogicNode("Policies", policyNodes) : null;
+        } catch (ex) {
+            vscode.window.showErrorMessage("Failed on getting policies");
+            return null;
         }
-        return artNodes;
     }
 
-    async getPolicies(): Promise<Node | null> {
-        let policies = await this.k10Client.getPolicies();
-        let policyNodes = policies.map(x => new PolicyNode(this.k10Client, x));
-        return policyNodes.length > 0 ? new LogicNode("Policies", policyNodes) : null;
+    addFilter(key: string, value: string) {
+        this.filters.push({ key, value });
+    }
+    addRootItems(...ids: string[]) {
+        this.rootIds.push(...ids);
     }
 
-    addRootItem(id: string) {
-        this.rootIds.push(id);
+    async withExceptionNotification(arg: () => Promise<void>, err: string) {
+        try {
+            await arg();
+        } catch {
+            vscode.window.showErrorMessage(err);
+        }
     }
 
 }
