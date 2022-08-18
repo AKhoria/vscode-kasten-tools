@@ -58,10 +58,30 @@ export abstract class Node extends vscode.TreeItem {
           light: assetUri("images/policy.svg"),
           dark: assetUri("images/policy-w.svg"),
         };
+      case "DataService":
+        return {
+          light: assetUri("images/data.svg"),
+          dark: assetUri("images/data-w.svg"),
+        };
+      case "EncryptionKey":
+        return {
+          light: assetUri("images/key.svg"),
+          dark: assetUri("images/key-w.svg"),
+        };
+      case "Repository":
+        return {
+          light: assetUri("images/repository.svg"),
+          dark: assetUri("images/repository-w.svg"),
+        };
+      case "LinkedVbrServer":
+        return {
+          light: assetUri("images/server.svg"),
+          dark: assetUri("images/server-w.svg"),
+        };
       default:
         return {
-          light: assetUri("images/manifest.svg"),
-          dark: assetUri("images/manifest-w.svg"),
+          light: assetUri("images/policy.svg"),
+          dark: assetUri("images/policy-w.svg"),
         };
     }
   }
