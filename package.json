@@ -40,6 +40,11 @@
           "light": "images/refresh-w.svg",
           "dark": "images/refresh.svg"
         }
+      },
+      {
+        "command": "kasten.resetTree",
+        "title": "Reset tree",
+        "icon": "$(discard)"
       }
     ],
     "views": {
@@ -54,6 +59,11 @@
       "view/title": [
         {
           "command": "kasten.refreshEntry",
+          "when": "view == kasten.view",
+          "group": "navigation"
+        },
+        {
+          "command": "kasten.resetTree",
           "when": "view == kasten.view",
           "group": "navigation"
         },

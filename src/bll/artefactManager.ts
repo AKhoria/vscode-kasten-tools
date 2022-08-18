@@ -53,6 +53,10 @@ export class ArtefactManager {
     addRootItems(...ids: string[]) {
         this.rootIds.push(...ids);
     }
+    reset() {
+        this.rootIds = [];
+        this.filters = [];
+    }
 
     async withExceptionNotification(arg: () => Promise<void>, err: string) {
         try {
