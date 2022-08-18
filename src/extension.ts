@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     vscode.commands.registerCommand("kasten.deleteEntry", deleteNode);
-    vscode.commands.registerCommand("kasten.addEntry", addNode);
+    vscode.commands.registerCommand("kasten.addEntry", addArtifactPallete(context));
 
     vscode.commands.registerCommand("kasten.addArtifactByID", (id: string) => {
       am.addRootItems(id);
@@ -67,7 +67,7 @@ class TreeProvider implements vscode.TreeDataProvider<Node> {
   refresh(): void {
     this._onDidChangeTreeData.fire(undefined);
   }
-  constructor(private rootManager: ArtefactManager) {}
+  constructor(private rootManager: ArtefactManager) { }
 
   getTreeItem(element: Node): vscode.TreeItem | Thenable<vscode.TreeItem> {
     // const treeItem = new vscode.TreeItem(element.getLabel(), element.collapsibleState);
@@ -100,7 +100,7 @@ async function addNode() {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
 
 let EXTENSION_CONTEXT: ExtensionContext | null = null;
 

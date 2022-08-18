@@ -25,7 +25,7 @@
       },
       {
         "command": "kasten.addEntry",
-        "title": "Add new ID",
+        "title": "Add new artifact",
         "category": "Kasten"
       },
       {
