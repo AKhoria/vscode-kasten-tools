@@ -42,7 +42,7 @@ export async function addByFilterCondition() {
     });
     if (key) {
         const value = await vscode.window.showInputBox({
-            value: '',
+            value: 'kasten-io-<name-of-backup>',
             placeHolder: 'Value',
         });
         if (value) {

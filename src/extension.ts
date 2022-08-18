@@ -36,6 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     vscode.commands.registerCommand("kasten.deleteEntry", deleteNode);
+    vscode.commands.registerCommand("kasten.refreshEntry", () => tree.refresh());
     vscode.commands.registerCommand("kasten.addEntry", addArtifactPallete(context));
 
     vscode.commands.registerCommand("kasten.addArtifactByID", (id: string) => {
