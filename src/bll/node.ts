@@ -14,6 +14,8 @@ export abstract class Node extends vscode.TreeItem {
     abstract getLabel(): string;
 
     abstract getType(): string;
+
+    abstract getIcon(): string;
 }
 
 export class ArtefactNode extends Node {
@@ -44,10 +46,14 @@ export class ArtefactNode extends Node {
     };
 
     getLabel(): string {
-        return "";
+        return `${this.artifact?.meta?.type} ${this.artifact?.id}`;
     }
 
     getType(): string {
+        return this.artifact.meta.type;
+    }
+
+    getIcon(): string {
         return this.artifact.meta.type;
     }
 }
@@ -62,6 +68,9 @@ export class PolicyNode extends Node {
             command: "kasten.open",
             arguments: [policy]
         };
+    }
+    getIcon(): string {
+        throw new Error('Method not implemented.');
     }
 
     async getChildren(): Promise<Node[]> {
