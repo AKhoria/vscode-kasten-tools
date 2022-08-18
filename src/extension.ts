@@ -12,93 +12,111 @@ import { ExtensionContext, Uri } from "vscode";
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
+  const kubectl = await k8s.extension.kubectl.v1;
 
-	const kubectl = await k8s.extension.kubectl.v1;
+  if (kubectl.available) {
+    let client = new K10Client(kubectl.api);
+    let am = new ArtefactManager(client);
+    let tree = new TreeProvider(am);
+    vscode.window.registerTreeDataProvider("kasten.view", tree);
 
-	if (kubectl.available) {
-		let client = new K10Client(kubectl.api);
-		let am = new ArtefactManager(client);
-		let tree = new TreeProvider(am);
-		vscode.window.registerTreeDataProvider('kasten.view', tree);
+    let disposable = vscode.commands.registerCommand(
+      "kasten.open",
+      async (content: any[]) => {
+        let doc = vscode.workspace.openTextDocument({
+          language: "json",
+          content: JSON.stringify(content, undefined, 4),
+        });
+        doc.then((x) => vscode.window.showTextDocument(x));
+      }
+    );
+    vscode.commands.registerCommand(
+      "kasten.addOpenArtifactWindow",
+      addArtifactPallete(context)
+    );
 
+    vscode.commands.registerCommand("kasten.deleteEntry", deleteNode);
+    vscode.commands.registerCommand("kasten.addEntry", addNode);
 
-		let disposable = vscode.commands.registerCommand('kasten.open', async (content: any[]) => {
+    vscode.commands.registerCommand("kasten.addArtifactByID", (id: string) => {
+      am.addRootItems(id);
+      tree.refresh();
+    });
+    vscode.commands.registerCommand(
+      "kasten.addArtifactsByFilter",
+      async ({ key, value }) => {
+        am.addFilter(key, value);
+        tree.refresh();
+      }
+    );
 
-			let doc = vscode.workspace.openTextDocument({
-				language: "json",
-				content: JSON.stringify(content, undefined, 4)
-			});
-			doc.then(x => vscode.window.showTextDocument(x));
-		});
-		vscode.commands.registerCommand('kasten.addOpenArtifactWindow', addArtifactPallete(context));
-		vscode.commands.registerCommand('kasten.addArtifactByID', (id: string) => {
-			am.addRootItems(id);
-			tree.refresh();
+    //TODO implement to make not dirty file explorer
+    //vscode.workspace.registerFileSystemProvider(K10S_RESOURCE_SCHEME, resourceDocProvider, { }),
 
-		});
-		vscode.commands.registerCommand('kasten.addArtifactsByFilter', async ({ key, value }) => {
-			am.addFilter(key, value);
-			tree.refresh();
-		});
-
-		//TODO implement to make not dirty file explorer
-		//vscode.workspace.registerFileSystemProvider(K10S_RESOURCE_SCHEME, resourceDocProvider, { }),
-
-
-		context.subscriptions.push(disposable);
-	}
+    context.subscriptions.push(disposable);
+  }
 }
 
 class TreeProvider implements vscode.TreeDataProvider<Node> {
+  private _onDidChangeTreeData: vscode.EventEmitter<Node | undefined> =
+    new vscode.EventEmitter<Node | undefined>();
 
-	private _onDidChangeTreeData: vscode.EventEmitter<
-		Node | undefined
-	> = new vscode.EventEmitter<Node | undefined>();
+  readonly onDidChangeTreeData: vscode.Event<Node | undefined> =
+    this._onDidChangeTreeData.event;
 
-	readonly onDidChangeTreeData: vscode.Event<Node | undefined> = this
-		._onDidChangeTreeData.event;
+  refresh(): void {
+    this._onDidChangeTreeData.fire(undefined);
+  }
+  constructor(private rootManager: ArtefactManager) {}
 
-	refresh(): void {
-		this._onDidChangeTreeData.fire(undefined);
-	}
-	constructor(private rootManager: ArtefactManager) { }
+  getTreeItem(element: Node): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    // const treeItem = new vscode.TreeItem(element.getLabel(), element.collapsibleState);
+    element.label = element.getLabel();
+    element.contextValue = "kasten.view";
+    element.iconPath = element.getIcon();
+    return element;
+  }
+  getChildren(element?: Node | undefined): vscode.ProviderResult<Node[]> {
+    if (element === undefined) {
+      return this.rootManager.getRootItems();
+    }
+    if (!element) {
+      return [];
+    }
+    return element.getChildren();
+  }
+}
 
-	getTreeItem(element: Node): vscode.TreeItem | Thenable<vscode.TreeItem> {
-		// const treeItem = new vscode.TreeItem(element.getLabel(), element.collapsibleState);
-		element.label = element.getLabel();
-		element.contextValue = "kasten.view";
-		element.iconPath = element.getIcon();
-		return element;
-	}
-	getChildren(element?: Node | undefined): vscode.ProviderResult<Node[]> {
-		if (element === undefined) {
-			return this.rootManager.getRootItems();
-		}
-		if (!element) {
-			return [];
-		}
-		return element.getChildren();
-	}
+async function deleteNode() {
+  //delete
+  //  refresh();
+  return null;
+}
+
+async function addNode() {
+  //add new id
+  //  refresh();
+  return null;
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}
 
 let EXTENSION_CONTEXT: ExtensionContext | null = null;
 
 export function setAssetContext(context: ExtensionContext) {
-	EXTENSION_CONTEXT = context;
+  EXTENSION_CONTEXT = context;
 }
 
 export function assetPath(relativePath: string): string {
-	if (EXTENSION_CONTEXT) {
-		// which it always should be
-		return EXTENSION_CONTEXT.asAbsolutePath(relativePath);
-	}
-	const absolutePath = path.join(__dirname, "..", relativePath);
-	return absolutePath;
+  if (EXTENSION_CONTEXT) {
+    // which it always should be
+    return EXTENSION_CONTEXT.asAbsolutePath(relativePath);
+  }
+  const absolutePath = path.join(__dirname, "..", relativePath);
+  return absolutePath;
 }
 
 export function assetUri(relativePath: string): Uri {
-	return Uri.file(assetPath(relativePath));
+  return Uri.file(assetPath(relativePath));
 }

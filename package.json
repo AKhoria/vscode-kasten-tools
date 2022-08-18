@@ -19,6 +19,16 @@
   "contributes": {
     "commands": [
       {
+        "command": "kasten.deleteEntry",
+        "title": "Remove from tree",
+        "category": "Kasten"
+      },
+      {
+        "command": "kasten.addEntry",
+        "title": "Add new ID",
+        "category": "Kasten"
+      },
+      {
         "command": "kasten.addOpenArtifactWindow",
         "category": "Kasten",
         "title": "Add Artefact"
@@ -54,13 +64,8 @@
       ],
       "view/item/context": [
         {
-          "command": "kasten.editEntry",
-          "when": "view == kasten.view && viewItem == dependency",
-          "group": "inline"
-        },
-        {
           "command": "kasten.deleteEntry",
-          "when": "view == kasten.view && viewItem == dependency"
+          "when": "view == kasten.view"
         }
       ]
     }
