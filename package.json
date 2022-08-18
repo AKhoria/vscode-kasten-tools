@@ -19,8 +19,9 @@
   "contributes": {
     "commands": [
       {
-        "command": "kasten.addArtifact",
-        "title": "Kasten: Add Artefact"
+        "command": "kasten.addOpenArtifactWindow",
+        "category": "Kasten",
+        "title": "Add Artefact"
       }
     ],
     "views": {

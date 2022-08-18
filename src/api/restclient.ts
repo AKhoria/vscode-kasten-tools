@@ -2,6 +2,7 @@ import { commands } from "vscode";
 import { KubectlV1 } from "vscode-kubernetes-tools-api";
 import { PolicyNode } from "../bll/node";
 import { Artifact } from "./artifact";
+import { Policy } from "./policy";
 
 export class K10Client {
     urlBuilder: UrlBuilder;
@@ -14,14 +15,14 @@ export class K10Client {
         return await this.requestService(this.catalogName, `v0/artifacts/${id}`);
     }
 
-    async getPolicies(): Promise<PolicyNode> {
-        let command = "kubectl get --namespace kasten-io policies.config.kio.kasten.io  -o=json";
+    async getPolicies(): Promise<Policy[]> {
+        let command = "get --namespace kasten-io policies.config.kio.kasten.io  -o=json";
         let output = await this.k.invokeCommand(command);
-        return JSON.parse(output?.stdout ?? "");
+        return JSON.parse(output?.stdout ?? "")?.["items"];
     }
 
-    async listArtifacts() {
-        // kubectl exec catalog-svc-858d5457fc-jmthb -- curl 'http://catalog-svc:8000/v0/artifacts/search?key=manifest-policy&value=kasten-io-basic-app-backup'
+    async listArtifacts(key: string, value: string): Promise<Artifact[]> {
+        return await this.requestService(this.catalogName, `v0/artifacts/search?key=${key}&value=${value}`);
     }
 
 
@@ -48,7 +49,7 @@ export class UrlBuilder {
     async getHostByService(service: string): Promise<string> {
         let output = await this.k.invokeCommand(`get service ${service} -o=json`);
         let serviceInfo = JSON.parse(output?.stdout ?? "")["spec"]["selector"];
-        let key = Object.keys(serviceInfo)[0]
+        let key = Object.keys(serviceInfo)[0];
         let output2 = await this.k.invokeCommand(`get pods --selector=${key}=${serviceInfo[key]} -o=name`);
 
         return (output2?.stdout ?? "").replace("pod/", "").replace("\n", "");

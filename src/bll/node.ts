@@ -1,13 +1,15 @@
 import * as vscode from 'vscode';
 import { Artifact } from '../api/artifact';
+import { Policy } from '../api/policy';
 import { K10Client } from '../api/restclient';
+import { KASTEN_NS } from '../const';
 
 export abstract class Node extends vscode.TreeItem {
     raw: any;
 
     children: Node[] | undefined;
 
-    abstract getChildren(): Promise<Node[]>;
+    abstract getChildren(): Promise<Node[]> | Node[];
 
     abstract getLabel(): string;
 
@@ -26,7 +28,7 @@ export class ArtefactNode extends Node {
         };
     }
 
-    async getChildren(): Promise<ArtefactNode[]> {
+    async getChildren(): Promise<Node[]> {
         //TODO simplify
         let childrenIds = this.artifact && this.artifact.meta && this.artifact.meta.manifest && this.artifact.meta.manifest.entries ?
             this.artifact.meta.manifest.entries
@@ -37,7 +39,7 @@ export class ArtefactNode extends Node {
             [];
 
         let childrenArts = await Promise.all(childrenIds.map(x => this.k10Client.getArtifactById(x)));
-        return childrenArts.map(x => new ArtefactNode(this.k10Client, x));
+        return childrenArts.map(x => x ? new ArtefactNode(this.k10Client, x) : new DeletedNode());
 
     };
 
@@ -52,14 +54,59 @@ export class ArtefactNode extends Node {
 
 
 export class PolicyNode extends Node {
-    getChildren(): Promise<Node[]> {
-        throw new Error('Method not implemented.');
+
+    constructor(private k10Client: K10Client, private policy: Policy) {
+        super(policy.metadata.name, vscode.TreeItemCollapsibleState.Collapsed);
+        this.command = {
+            title: "Open",
+            command: "kasten.open",
+            arguments: [policy]
+        };
+    }
+
+    async getChildren(): Promise<Node[]> {
+        let arts = await this.k10Client.listArtifacts("manifest-policy", `${KASTEN_NS}-${this.policy.metadata.name}`);
+        return arts.map(x => new ArtefactNode(this.k10Client, x));
     }
     getLabel(): string {
-        throw new Error('Method not implemented.');
+        return this.policy.metadata.name;
     }
     getType(): string {
-        throw new Error('Method not implemented.');
+        return "policy";
     }
 
 }
+
+export class LogicNode extends Node {
+    constructor(label: string, children: Node[]) {
+        super(label, vscode.TreeItemCollapsibleState.Collapsed);
+        this.children = children;
+    }
+    getChildren(): Node[] {
+        return this.children ?? [];
+    }
+    getLabel(): string {
+        return this.label?.toString() ?? "Undefined object";
+    }
+    getType(): string {
+        return "Root policy";
+    }
+
+}
+
+export class DeletedNode extends Node {
+    constructor() {
+        super("Node deleted or not found", vscode.TreeItemCollapsibleState.None);
+    }
+    getChildren(): Node[] | Promise<Node[]> {
+        return [];
+    }
+    getLabel(): string {
+        return this.label?.toString() ?? "";
+    }
+    getType(): string {
+        return "Deleted";
+    }
+
+}
+
