@@ -12,3 +12,9 @@ Extention for Kasten. Allows request and manage K10 object using kubernetes exte
 
 Requirements:
    [Kubernetes extention](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools)
+   
+Installation:
+   Download release
+   Run 
+      npm install -g vsce
+      code --install-extension vscode-kasten-tools-0.0.1.vsix
