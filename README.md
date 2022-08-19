@@ -14,7 +14,7 @@ Requirements:
    [Kubernetes extention](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools)
    
 Installation:
-   Download release
-   Run 
-      npm install -g vsce
-      code --install-extension vscode-kasten-tools-0.0.1.vsix
+   - Download release
+   - Run 
+      - npm install -g vsce
+      - code --install-extension vscode-kasten-tools-0.0.1.vsix
