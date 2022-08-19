@@ -1,6 +1,6 @@
 # vscode-kasten-tools README
 
-Extention for Kasten. Allows request and manage K10 object using kubernetes extention page
+VSCODE extention for Kasten. Allows request and manage K10 object using kubernetes extention page
 
 ## Features
 
