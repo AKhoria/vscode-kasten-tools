@@ -87,7 +87,7 @@ export abstract class Node extends vscode.TreeItem {
   }
 }
 
-export class ArtefactNode extends Node {
+export class ArtifactNode extends Node {
   raw: any;
   constructor(private k10Client: K10Client, private artifact: Artifact) {
     super(
@@ -123,7 +123,7 @@ export class ArtefactNode extends Node {
       childrenIds.map((x) => this.k10Client.getArtifactById(x))
     );
     return childrenArts.map((x) =>
-      x ? new ArtefactNode(this.k10Client, x) : new DeletedNode()
+      x ? new ArtifactNode(this.k10Client, x) : new DeletedNode()
     );
   }
 
@@ -151,7 +151,7 @@ export class PolicyNode extends Node {
       "manifest-policy",
       `${KASTEN_NS}-${this.policy.metadata.name}`
     );
-    return arts.map((x) => new ArtefactNode(this.k10Client, x));
+    return arts.map((x) => new ArtifactNode(this.k10Client, x));
   }
   getLabel(): string {
     return this.policy.metadata.name;

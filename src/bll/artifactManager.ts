@@ -1,7 +1,7 @@
 import { K10Client } from '../api/restclient';
-import { ArtefactNode, LogicNode, Node, PolicyNode } from './node';
+import { ArtifactNode, LogicNode, Node, PolicyNode } from './node';
 import * as vscode from 'vscode';
-export class ArtefactManager {
+export class ArtifactManager {
     rootIds: string[];
     filters: { key: string, value: string }[];
     constructor(private k10Client: K10Client) {
@@ -12,7 +12,7 @@ export class ArtefactManager {
         let res: Node[] = [];
         await this.withExceptionNotification(async () => {
             let arts = await Promise.all(this.rootIds.map(rootId => this.k10Client.getArtifactById(rootId)));
-            let artNodes = arts.map(rootArt => new ArtefactNode(this.k10Client, rootArt) as Node);
+            let artNodes = arts.map(rootArt => new ArtifactNode(this.k10Client, rootArt) as Node);
             res = [...res, ...artNodes];
         }, "Failed to get artifacts by ID");
 
@@ -27,7 +27,7 @@ export class ArtefactManager {
             if (this.filters.length > 0) {
                 let filteredNodes = (await Promise.all(this.filters.map(async ({ key, value }) => {
                     let filteredArts = await this.k10Client.listArtifacts(key, value);
-                    return filteredArts.map(x => new ArtefactNode(this.k10Client, x) as Node);
+                    return filteredArts.map(x => new ArtifactNode(this.k10Client, x) as Node);
                 }))).flatMap(x => x);
                 res = [...res, ...filteredNodes];
             }

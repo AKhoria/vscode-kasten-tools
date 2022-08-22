@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import * as k8s from "vscode-kubernetes-tools-api";
 import { addArtifactPallete } from "./bll/commandPallete";
 import { K10Client } from "./api/restclient";
-import { ArtefactManager } from "./bll/artefactManager";
+import { ArtifactManager } from "./bll/artifactManager";
 import { Node } from "./bll/node";
 import * as path from "path";
 import { ExtensionContext, Uri } from "vscode";
@@ -16,7 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (kubectl.available) {
     let client = new K10Client(kubectl.api);
-    let am = new ArtefactManager(client);
+    let am = new ArtifactManager(client);
     let tree = new TreeProvider(am);
     vscode.window.registerTreeDataProvider("kasten.view", tree);
 
@@ -73,7 +73,7 @@ class TreeProvider implements vscode.TreeDataProvider<Node> {
   refresh(): void {
     this._onDidChangeTreeData.fire(undefined);
   }
-  constructor(private rootManager: ArtefactManager) { }
+  constructor(private rootManager: ArtifactManager) { }
 
   getTreeItem(element: Node): vscode.TreeItem | Thenable<vscode.TreeItem> {
     // const treeItem = new vscode.TreeItem(element.getLabel(), element.collapsibleState);

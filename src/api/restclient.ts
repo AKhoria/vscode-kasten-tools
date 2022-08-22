@@ -22,7 +22,12 @@ export class K10Client {
     }
 
     async listArtifacts(key: string, value: string): Promise<Artifact[]> {
-        return await this.requestService(this.catalogName, `v0/artifacts/search?key=${key}&value=${value}`);
+        const artifacts: Artifact[] = await this.requestService(this.catalogName, `v0/artifacts/search?key=${key}&value=${value}`);
+        return artifacts.sort((a: Artifact, b: Artifact) => {
+            const act: number = new Date(a.creationTime).getTime();
+            const bct: number = new Date(b.creationTime).getTime();
+            return bct - act;
+        });
     }
 
 

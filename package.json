@@ -31,7 +31,7 @@
       {
         "command": "kasten.addOpenArtifactWindow",
         "category": "Kasten",
-        "title": "Add Artefact"
+        "title": "Add Artifact"
       },
       {
         "command": "kasten.refreshEntry",
