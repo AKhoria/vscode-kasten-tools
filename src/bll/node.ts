@@ -107,24 +107,33 @@ export class ArtifactNode extends Node {
     //TODO simplify
     let childrenIds =
       this.artifact &&
-      this.artifact.meta &&
-      this.artifact.meta.manifest &&
-      this.artifact.meta.manifest.entries
+        this.artifact.meta &&
+        this.artifact.meta.manifest &&
+        this.artifact.meta.manifest.entries
         ? this.artifact.meta.manifest.entries
-            .map((e) =>
-              e.artifactReference
-                ? [e.artifactReference.id]
-                : e.artifactReferenceGroup
-            )
-            .flatMap((a) => a)
+          .map((e) =>
+            e.artifactReference
+              ? [e.artifactReference.id]
+              : e.artifactReferenceGroup
+          )
+          .flatMap((a) => a)
         : [];
 
     let childrenArts = await Promise.all(
       childrenIds.map((x) => this.k10Client.getArtifactById(x))
     );
-    return childrenArts.map((x) =>
+    let result = childrenArts.map((x) =>
       x ? new ArtifactNode(this.k10Client, x) : new DeletedNode()
     );
+
+    if (this.artifact?.meta?.manifest?.jobID) {
+      let job = await this.k10Client.getJob(this.artifact?.meta?.manifest?.jobID);
+      if (job) {
+        result.push(new JobNode(job));
+      }
+    }
+
+    return result;
   }
 
   getLabel(): string {
@@ -190,4 +199,26 @@ export class DeletedNode extends Node {
   getType(): string {
     return "Deleted";
   }
+}
+
+export class JobNode extends Node {
+  constructor(private obj: any) {
+    super(obj.id, vscode.TreeItemCollapsibleState.None);
+    this.command = {
+      title: "Open",
+      command: "kasten.open",
+      arguments: [obj],
+    };
+    this.contextValue = "job";
+  }
+  getChildren(): Node[] | Promise<Node[]> {
+    return [];
+  }
+  getLabel(): string {
+    return `Job ${this.obj.id}`;
+  }
+  getType(): string {
+    return "Job";
+  }
+
 }

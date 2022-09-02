@@ -5,10 +5,16 @@ import { Artifact } from "./artifact";
 import { Policy } from "./policy";
 
 export class K10Client {
+
     urlBuilder: UrlBuilder;
     catalogName: string = "catalog-svc";
+    jobName: string = "jobs-svc";
     constructor(private k: KubectlV1) {
         this.urlBuilder = new UrlBuilder(k);
+    }
+
+    async getJob(jobID: string): Promise<any> {
+        return await this.requestService(this.jobName, `v0/jobs/${jobID}`);
     }
 
     async getArtifactById(id: string): Promise<Artifact> {
