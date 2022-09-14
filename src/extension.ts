@@ -42,6 +42,13 @@ export async function activate(context: vscode.ExtensionContext) {
       am.reset();
       tree.refresh();
     });
+    vscode.commands.registerCommand("kasten.resetJob", async (job: any) => {
+      try {
+        await client.resetJob(job.obj.id);
+      } catch {
+        vscode.window.showErrorMessage("Failed reseting job");
+      }
+    });
 
 
     vscode.commands.registerCommand("kasten.addArtifactByID", (id: string) => {
@@ -78,7 +85,6 @@ class TreeProvider implements vscode.TreeDataProvider<Node> {
   getTreeItem(element: Node): vscode.TreeItem | Thenable<vscode.TreeItem> {
     // const treeItem = new vscode.TreeItem(element.getLabel(), element.collapsibleState);
     element.label = element.getLabel();
-    element.contextValue = "kasten.view";
     element.iconPath = element.getIcon();
     return element;
   }

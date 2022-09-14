@@ -209,7 +209,7 @@ export class JobNode extends Node {
       command: "kasten.open",
       arguments: [obj],
     };
-    this.contextValue = "job";
+    this.contextValue = "kasten.view.job";
   }
   getChildren(): Node[] | Promise<Node[]> {
     return [];
@@ -220,5 +220,4 @@ export class JobNode extends Node {
   getType(): string {
     return "Job";
   }
-
 }

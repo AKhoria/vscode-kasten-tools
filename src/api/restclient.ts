@@ -16,6 +16,10 @@ export class K10Client {
     async getJob(jobID: string): Promise<any> {
         return await this.requestService(this.jobName, `v0/jobs/${jobID}`);
     }
+    async resetJob(jobID: string): Promise<any> {
+        let body = jobID;
+        return await this.requestService(this.jobName, `v0/queuedjobs/reset?visibilityTimeout=0`, "POST", body);
+    }
 
     async getArtifactById(id: string): Promise<Artifact> {
         return await this.requestService(this.catalogName, `v0/artifacts/${id}`);
@@ -38,11 +42,15 @@ export class K10Client {
 
 
 
-    async requestService<T>(service: string, path: string, method: string = "GET"): Promise<T> {
+    async requestService<T>(service: string, path: string, method: string = "GET", body: any = null): Promise<T> {
         try {
             let podName = `${await this.urlBuilder.getHostByService(service)}`;
             let url = `http://localhost:8000/${path}`;
-            let command = `exec ${podName} -- curl '${url}'`;
+            let bodyCommand = "";
+            if (body) {
+                bodyCommand = `-H "Content-Type: application/json" --data ` + `'"${body}"'`;
+            }
+            let command = `exec ${podName} -- curl ${bodyCommand} '${url}'`;
             let output = await this.k.invokeCommand(command);
             return JSON.parse(output?.stdout ?? "");
         } catch {

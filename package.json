@@ -34,6 +34,11 @@
         "title": "Add Artifact"
       },
       {
+        "command": "kasten.resetJob",
+        "category": "Kasten",
+        "title": "Reset Job"
+      },
+      {
         "command": "kasten.refreshEntry",
         "title": "Refresh",
         "icon": {
@@ -76,6 +81,10 @@
         {
           "command": "kasten.deleteEntry",
           "when": "view == kasten.view"
+        },
+        {
+          "command": "kasten.resetJob",
+          "when": "view == kasten.view && viewItem == kasten.view.job"
         }
       ]
     }
