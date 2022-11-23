@@ -3,12 +3,25 @@ import { KubectlV1 } from "vscode-kubernetes-tools-api";
 import { PolicyNode } from "../bll/node";
 import { Artifact } from "./artifact";
 import { Policy } from "./policy";
+import * as vscode from "vscode";
 
 export class K10Client {
+    async decryptKey(text: string) {
+        let body = `{"Data":"${text}"}`;
+        let result = await this.requestService<{ data: string }>(this.cryptoName, `v0/decryptdata`, "POST", body);
+        if (result.data) {
+            vscode.env.clipboard.writeText(result.data);
+            vscode.window.showInformationMessage("Copied to clipboard");
+        }
+    }
 
     urlBuilder: UrlBuilder;
     catalogName: string = "catalog-svc";
     jobName: string = "jobs-svc";
+    cryptoName: string = "crypto-svc";
+
+    terminal: vscode.OutputChannel | undefined;
+
     constructor(private k: KubectlV1) {
         this.urlBuilder = new UrlBuilder(k);
     }
@@ -17,7 +30,7 @@ export class K10Client {
         return await this.requestService(this.jobName, `v0/jobs/${jobID}`);
     }
     async resetJob(jobID: string): Promise<any> {
-        let body = jobID;
+        let body = `"${jobID}"`;
         return await this.requestService(this.jobName, `v0/queuedjobs/reset?visibilityTimeout=0`, "POST", body);
     }
 
@@ -40,23 +53,36 @@ export class K10Client {
         });
     }
 
-
-
     async requestService<T>(service: string, path: string, method: string = "GET", body: any = null): Promise<T> {
         try {
             let podName = `${await this.urlBuilder.getHostByService(service)}`;
             let url = `http://localhost:8000/${path}`;
             let bodyCommand = "";
             if (body) {
-                bodyCommand = `-H "Content-Type: application/json" --data ` + `'"${body}"'`;
+                bodyCommand = `-H "Content-Type: application/json" --data ` + `'${body}'`;
             }
             let command = `exec ${podName} -- curl ${bodyCommand} '${url}'`;
+            this.log(command);
             let output = await this.k.invokeCommand(command);
             return JSON.parse(output?.stdout ?? "");
-        } catch {
+        } catch (ex) {
             return null as any;
         }
 
+    }
+    log(command: string) {
+        if (this.terminal) {
+            this.terminal.appendLine(command);
+        }
+    }
+
+    set logging(val: boolean) {
+        if (!this.terminal && val) {
+            this.terminal = vscode.window.createOutputChannel("Kasten extention");;
+        }
+        if (!val && this.terminal) {
+            this.terminal.dispose();
+        }
     }
 
 }

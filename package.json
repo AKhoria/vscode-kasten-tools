@@ -2,7 +2,7 @@
   "name": "vscode-kasten-tools",
   "displayName": "vscode-kasten-tools",
   "description": "VSCODE extension for kasten",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.70.0"
   },
@@ -50,6 +50,10 @@
         "command": "kasten.resetTree",
         "title": "Reset tree",
         "icon": "$(discard)"
+      },
+      {
+        "command": "kasten.decryptKey",
+        "title": "Decrypt Key"
       }
     ],
     "views": {
@@ -85,6 +89,10 @@
         {
           "command": "kasten.resetJob",
           "when": "view == kasten.view && viewItem == kasten.view.job"
+        },
+        {
+          "command": "kasten.decryptKey",
+          "when": "view == kasten.view && viewItem == kasten.view.policy-EncryptionKey"
         }
       ]
     }

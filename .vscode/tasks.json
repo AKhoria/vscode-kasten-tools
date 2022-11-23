@@ -15,6 +15,18 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "bridge-to-kubernetes.resource",
+			"type": "bridge-to-kubernetes.resource",
+			"resource": "executor-svc",
+			"resourceType": "service",
+			"ports": [
+				8000
+			],
+			"targetCluster": "jai-test",
+			"targetNamespace": "kasten-io",
+			"useKubernetesServiceEnvironmentVariables": false
 		}
 	]
 }

@@ -16,6 +16,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (kubectl.available) {
     let client = new K10Client(kubectl.api);
+    client.logging = true;
     let am = new ArtifactManager(client);
     let tree = new TreeProvider(am);
     vscode.window.registerTreeDataProvider("kasten.view", tree);
@@ -47,6 +48,14 @@ export async function activate(context: vscode.ExtensionContext) {
         await client.resetJob(job.obj.id);
       } catch {
         vscode.window.showErrorMessage("Failed reseting job");
+      }
+    });
+
+    vscode.commands.registerCommand("kasten.decryptKey", async (key: any) => {
+      try {
+        await client.decryptKey(key?.artifact?.meta?.encryptionKey?.cipherText);
+      } catch {
+        vscode.window.showErrorMessage("Failed decrypting key");
       }
     });
 

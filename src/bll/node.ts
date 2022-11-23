@@ -101,6 +101,7 @@ export class ArtifactNode extends Node {
       command: "kasten.open",
       arguments: [artifact],
     };
+    this.contextValue = `kasten.view.policy-${this.getType()}`;
   }
 
   async getChildren(): Promise<Node[]> {
