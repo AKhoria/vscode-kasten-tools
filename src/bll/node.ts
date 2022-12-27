@@ -2,13 +2,9 @@ import { mainModule } from "process";
 import * as vscode from "vscode";
 import { Artifact } from "../api/artifact";
 import { Policy } from "../api/policy";
-import { K10Client } from "../api/restclient";
+import { K10Client } from "../api/k10client";
 import { KASTEN_NS } from "../const";
 import { assetUri } from "../extension";
-
-// let map = {
-//     "key":"value"
-// };
 
 export abstract class Node extends vscode.TreeItem {
   raw: any;
@@ -22,11 +18,6 @@ export abstract class Node extends vscode.TreeItem {
   abstract getType(): string;
 
   getIcon(): { light: string | vscode.Uri; dark: string | vscode.Uri } {
-    // if (this.getType() in map) {
-    //     return map[this.getType()]
-    // } else {
-    //     return default
-    // }
     switch (this.getType()) {
       case "Snapshot":
         return {
@@ -99,7 +90,7 @@ export class ArtifactNode extends Node {
     this.command = {
       title: "Open",
       command: "kasten.open",
-      arguments: [artifact],
+      arguments: [[artifact]],
     };
     this.contextValue = `kasten.view.policy-${this.getType()}`;
   }
@@ -107,18 +98,14 @@ export class ArtifactNode extends Node {
   async getChildren(): Promise<Node[]> {
     //TODO simplify
     let childrenIds =
-      this.artifact &&
-        this.artifact.meta &&
-        this.artifact.meta.manifest &&
-        this.artifact.meta.manifest.entries
-        ? this.artifact.meta.manifest.entries
-          .map((e) =>
-            e.artifactReference
-              ? [e.artifactReference.id]
-              : e.artifactReferenceGroup
-          )
-          .flatMap((a) => a)
-        : [];
+      this.artifact?.meta?.manifest?.entries
+        ?.map((e) =>
+          e.artifactReference
+            ? [e.artifactReference.id]
+            : e.artifactReferenceGroup
+        )
+        ?.flatMap((a) => a) ?? []
+      ;
 
     let childrenArts = await Promise.all(
       childrenIds.map((x) => this.k10Client.getArtifactById(x))
@@ -127,8 +114,9 @@ export class ArtifactNode extends Node {
       x ? new ArtifactNode(this.k10Client, x) : new DeletedNode()
     );
 
-    if (this.artifact?.meta?.manifest?.jobID) {
-      let job = await this.k10Client.getJob(this.artifact?.meta?.manifest?.jobID);
+    let jobID = this.artifact?.meta?.manifest?.jobID;
+    if (jobID) {
+      let job = await this.k10Client.getJob(jobID);
       if (job) {
         result.push(new JobNode(job));
       }
@@ -152,7 +140,7 @@ export class PolicyNode extends Node {
     this.command = {
       title: "Open",
       command: "kasten.open",
-      arguments: [policy],
+      arguments: [[policy]],
     };
   }
 
@@ -208,7 +196,7 @@ export class JobNode extends Node {
     this.command = {
       title: "Open",
       command: "kasten.open",
-      arguments: [obj],
+      arguments: [[obj]],
     };
     this.contextValue = "kasten.view.job";
   }

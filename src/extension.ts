@@ -2,12 +2,13 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import * as k8s from "vscode-kubernetes-tools-api";
-import { addArtifactPallete } from "./bll/commandPallete";
-import { K10Client } from "./api/restclient";
+import { addArtifactPallete } from "./bll/artifactCommandPallete";
+import { K10Client } from "./api/k10client";
 import { ArtifactManager } from "./bll/artifactManager";
 import { Node } from "./bll/node";
 import * as path from "path";
 import { ExtensionContext, Uri } from "vscode";
+import { serviceForwardPallete } from "./bll/serviceForwardCommandPallete";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -24,15 +25,24 @@ export async function activate(context: vscode.ExtensionContext) {
     let disposable = vscode.commands.registerCommand(
       "kasten.open",
       async (content: any[]) => {
-        let doc = vscode.workspace.openTextDocument({
-          language: "json",
-          content: JSON.stringify(content, undefined, 4),
-        });
+        let language = content.length > 1 ? content[1] : "json";
+        let fileContent = language === "json" ? JSON.stringify(content[0], undefined, 4) : content[0] as string;
+        let doc = vscode.workspace.openTextDocument({ language: language, content: fileContent });
         doc.then((x) => vscode.window.showTextDocument(x));
       }
     );
     vscode.commands.registerCommand(
       "kasten.addOpenArtifactWindow",
+      addArtifactPallete(context)
+    );
+
+    vscode.commands.registerCommand(
+      "kasten.portForwardServiceStart",
+      serviceForwardPallete(context, client)
+    );
+
+    vscode.commands.registerCommand(
+      "kasten.portForwardServiceStop",
       addArtifactPallete(context)
     );
 
@@ -64,6 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
       am.addRootItems(id);
       tree.refresh();
     });
+
     vscode.commands.registerCommand(
       "kasten.addArtifactsByFilter",
       async ({ key, value }) => {

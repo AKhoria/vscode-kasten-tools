@@ -1,4 +1,4 @@
-import { K10Client } from '../api/restclient';
+import { K10Client } from '../api/k10client';
 import { ArtifactNode, LogicNode, Node, PolicyNode } from './node';
 import * as vscode from 'vscode';
 export class ArtifactManager {

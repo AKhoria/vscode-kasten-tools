@@ -4,8 +4,31 @@ import { PolicyNode } from "../bll/node";
 import { Artifact } from "./artifact";
 import { Policy } from "./policy";
 import * as vscode from "vscode";
+import { Service } from "../bll/service";
 
 export class K10Client {
+    async scaleDownService(targetService: string) {
+        await this.k.invokeCommand(`scale deploy ${targetService} --replicas=0`);
+    }
+    async getPodEnvVars(targetService: string): Promise<Map<string, string>> {
+
+        let output = await this.k.invokeCommand(`get service ${targetService} -o=json`);
+        let serviceInfo = JSON.parse(output?.stdout ?? "")["spec"]["selector"];
+        let key = Object.keys(serviceInfo)[0];
+        let output2 = await this.k.invokeCommand(`get pod --selector=${key}=${serviceInfo[key]} -o=jsonpath='{.items[0].spec.containers[0].env[*].name}'`);
+        let envVarNames = new Set<string>(output2?.stdout?.split(" "));
+
+        // TODO extract logic
+        let pod = await this.urlBuilder.getHostByService(targetService);
+        let command = `exec -it -n kasten-io "${pod}" -- bash -c "printenv"`;
+        let res = await this.k.invokeCommand(command);
+        let envVars = res?.stdout?.split("\n")?.map(pair => pair.split("="));
+        if (!envVars) {
+            return new Map<string, string>(); //TODO handle
+        }
+        return new Map<string, string>(envVars.filter(x => envVarNames.has(x[0])).map(x => [x[0], x[1]]));
+
+    }
     async decryptKey(text: string) {
         let body = `{"Data":"${text}"}`;
         let result = await this.requestService<{ data: string }>(this.cryptoName, `v0/decryptdata`, "POST", body);
@@ -20,10 +43,20 @@ export class K10Client {
     jobName: string = "jobs-svc";
     cryptoName: string = "crypto-svc";
 
+
+
     terminal: vscode.OutputChannel | undefined;
 
     constructor(private k: KubectlV1) {
         this.urlBuilder = new UrlBuilder(k);
+    }
+
+    async getServices(): Promise<Service[]> {
+        const command = `get services -o=json`;
+        let output = await this.k.invokeCommand(command);
+        //TODO refactor
+        const services = JSON.parse(output?.stdout ?? "{'items':[]}")["items"];
+        return services;
     }
 
     async getJob(jobID: string): Promise<any> {
@@ -36,6 +69,12 @@ export class K10Client {
 
     async getArtifactById(id: string): Promise<Artifact> {
         return await this.requestService(this.catalogName, `v0/artifacts/${id}`);
+    }
+
+    private async executeKubectl(command: string) {
+        let output = await this.k.invokeCommand(command);
+        let pod = JSON.parse(output?.stdout ?? "")?.["items"];
+        return pod;
     }
 
     async getPolicies(): Promise<Policy[]> {

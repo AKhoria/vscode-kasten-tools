@@ -24,7 +24,7 @@
 			"ports": [
 				8000
 			],
-			"targetCluster": "jai-test",
+			"targetCluster": "do-sfo2-ankhoria1312",
 			"targetNamespace": "kasten-io",
 			"useKubernetesServiceEnvironmentVariables": false
 		}

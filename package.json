@@ -2,7 +2,7 @@
   "name": "vscode-kasten-tools",
   "displayName": "vscode-kasten-tools",
   "description": "VSCODE extension for kasten",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.70.0"
   },
@@ -10,7 +10,9 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:kasten.view"
+    "onView:kasten.view",
+    "onCommand:kasten.portForwardServiceStart",
+    "onCommand:kasten.portForwardServiceStop"
   ],
   "extensionDependencies": [
     "ms-kubernetes-tools.vscode-kubernetes-tools"
@@ -32,6 +34,16 @@
         "command": "kasten.addOpenArtifactWindow",
         "category": "Kasten",
         "title": "Add Artifact"
+      },
+      {
+        "command": "kasten.portForwardServiceStart",
+        "category": "Kasten",
+        "title": "Port Forward Kasten service"
+      },
+      {
+        "command": "kasten.portForwardServiceStop",
+        "category": "Kasten",
+        "title": "Stop port forwarding for Kasten service"
       },
       {
         "command": "kasten.resetJob",
@@ -65,6 +77,12 @@
       ]
     },
     "menus": {
+      "commandPalette": [
+        {
+          "command": "kasten.refreshEntry",
+          "when": "false"
+        }
+      ],
       "view/title": [
         {
           "command": "kasten.refreshEntry",
