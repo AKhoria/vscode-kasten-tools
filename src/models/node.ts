@@ -1,10 +1,10 @@
 import { mainModule } from "process";
 import * as vscode from "vscode";
-import { Artifact } from "../api/artifact";
-import { Policy } from "../api/policy";
-import { K10Client } from "../api/k10client";
+import { Artifact } from "./artifact";
+import { Policy } from "./policy";
+import { K10Client } from "../clients/k10RestClient";
 import { KASTEN_NS } from "../const";
-import { assetUri } from "../extension";
+import path = require("path");
 
 export abstract class Node extends vscode.TreeItem {
   raw: any;
@@ -209,4 +209,23 @@ export class JobNode extends Node {
   getType(): string {
     return "Job";
   }
+}
+
+let EXTENSION_CONTEXT: vscode.ExtensionContext | null = null;
+
+export function setAssetContext(context: vscode.ExtensionContext) {
+  EXTENSION_CONTEXT = context;
+}
+
+export function assetPath(relativePath: string): string {
+  if (EXTENSION_CONTEXT) {
+    // which it always should be
+    return EXTENSION_CONTEXT.asAbsolutePath(relativePath);
+  }
+  const absolutePath = path.join(__dirname, "..", "..", relativePath);
+  return absolutePath;
+}
+
+export function assetUri(relativePath: string): vscode.Uri {
+  return vscode.Uri.file(assetPath(relativePath));
 }

@@ -19,6 +19,24 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Kasten",
+      "properties": {
+        "kasten.portForwardStartingPort": {
+          "type": "number",
+          "default": 8001,
+          "description": "Port which will be the first for port forwarding."
+        },
+        "kasten.extraEnvVars": {
+          "type": "array",
+          "default": [
+            "POD_SERVICE_ACCOUNT=k10-k10",
+            "CRYPTO_SVC_SERVICE_PORT_EVENTS=8002"
+          ],
+          "description": "Extra env vars which will be added into port forward output"
+        }
+      }
+    },
     "commands": [
       {
         "command": "kasten.deleteEntry",

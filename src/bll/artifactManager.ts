@@ -1,10 +1,11 @@
-import { K10Client } from '../api/k10client';
-import { ArtifactNode, LogicNode, Node, PolicyNode } from './node';
+import { K10Client } from '../clients/k10RestClient';
+import { ArtifactNode, LogicNode, Node, PolicyNode } from '../models/node';
 import * as vscode from 'vscode';
+import { KubctlClient } from '../clients/kubctlClient';
 export class ArtifactManager {
     rootIds: string[];
     filters: { key: string, value: string }[];
-    constructor(private k10Client: K10Client) {
+    constructor(private k10Client: K10Client, private kubectClient: KubctlClient) {
         this.rootIds = [];
         this.filters = [];
     }
@@ -38,7 +39,7 @@ export class ArtifactManager {
 
     async getPolicy(): Promise<Node | null> {
         try {
-            let policies = await this.k10Client.getPolicies();
+            let policies = await this.kubectClient.getPolicies();
             let policyNodes = policies.map(x => new PolicyNode(this.k10Client, x));
             return policyNodes.length > 0 ? new LogicNode("Policies", policyNodes) : null;
         } catch (ex) {

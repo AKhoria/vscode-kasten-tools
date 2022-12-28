@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
-import { ExtensionContext } from 'vscode';
-import { K10Client } from '../api/k10client';
-import { Service } from './service';
+import { KubctlClient } from '../clients/kubctlClient';
+import { SettingsClient } from '../clients/settingsClient';
+import { Service } from '../models/service';
 
-export function serviceForwardPallete(context: vscode.ExtensionContext, client: K10Client): (...args: any[]) => any {
+export function serviceForwardPallete(kubeConfigPath: string, kubectlClient: KubctlClient): (...args: any[]) => any {
     return async () => {
-        const services = await client.getServices();
+        const services = await kubectlClient.getServices();
 
         const quickPick = vscode.window.createQuickPick();
 
         quickPick.items = services.map(service => ({ label: service.metadata.name }));
         quickPick.onDidChangeSelection(async selection => {
             if (selection[0]) {
-                await portForward(client, selection[0].label, services);
+                await portForward(kubectlClient, selection[0].label, services, kubeConfigPath);
             }
         });
         quickPick.onDidHide(() => quickPick.dispose());
@@ -20,21 +20,26 @@ export function serviceForwardPallete(context: vscode.ExtensionContext, client: 
     };
 }
 
-async function portForward(client: K10Client, targetService: string, services: Service[]) {
-    // TODO dynamic port or settings/parameters
-    let localPort = 8001;
+async function portForward(client: KubctlClient, targetService: string, services: Service[], kubeConfigPath: string) {
+    let settingsController = new SettingsClient(); //TODO  inject
+    let localPort = settingsController.getSetting<number>("portForwardStartingPort") ?? 8001;
+    let output = settingsController.getSetting<string[]>("extraEnvVars") ?? [];
 
 
     var envVarMap = await client.getPodEnvVars(targetService);
 
     // TODO add to plugin's setting
-    envVarMap.set("POD_SERVICE_ACCOUNT", "k10-k10");
-    envVarMap.set("CRYPTO_SVC_SERVICE_PORT_EVENTS", "8002");
+
 
     services.forEach(srv => {
         if (srv.metadata.name !== targetService) {
             srv.spec.ports.forEach(portInfo => {
-                let terminal = vscode.window.createTerminal(srv.metadata.name);
+                const terminalOptions = {
+                    name: srv.metadata.name,
+                    env: process.env
+                };
+                terminalOptions.env['KUBECONFIG'] = kubeConfigPath;
+                let terminal = vscode.window.createTerminal(terminalOptions);
                 terminal.hide();
                 terminal.sendText(`kubectl port-forward deployments/${srv.metadata.name} ${localPort}:${portInfo.port} -n kasten-io`);
 
@@ -49,7 +54,7 @@ async function portForward(client: K10Client, targetService: string, services: S
             });
         }
     });
-    let output: string[] = [];
+
     envVarMap.forEach((val, key) => output.push(`${key}=${val}`));
 
     await client.scaleDownService(targetService);
