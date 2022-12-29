@@ -12,7 +12,8 @@ export function serviceForwardPallete(kubeConfigPath: string, kubectlClient: Kub
         quickPick.items = services.map(service => ({ label: service.metadata.name }));
         quickPick.onDidChangeSelection(async selection => {
             if (selection[0]) {
-                await portForward(kubectlClient, selection[0].label, services, kubeConfigPath);
+                portForward(kubectlClient, selection[0].label, services, kubeConfigPath);
+                quickPick.hide();
             }
         });
         quickPick.onDidHide(() => quickPick.dispose());
@@ -21,6 +22,7 @@ export function serviceForwardPallete(kubeConfigPath: string, kubectlClient: Kub
 }
 
 async function portForward(client: KubctlClient, targetService: string, services: Service[], kubeConfigPath: string) {
+    vscode.window.showInformationMessage("Starting port forwarding...");
     let settingsController = new SettingsClient(); //TODO  inject
     let localPort = settingsController.getSetting<number>("portForwardStartingPort") ?? 8001;
     let output = settingsController.getSetting<string[]>("extraEnvVars") ?? [];
@@ -29,7 +31,6 @@ async function portForward(client: KubctlClient, targetService: string, services
     var envVarMap = await client.getPodEnvVars(targetService);
 
     // TODO add to plugin's setting
-
 
     services.forEach(srv => {
         if (srv.metadata.name !== targetService) {
@@ -57,11 +58,13 @@ async function portForward(client: KubctlClient, targetService: string, services
 
     envVarMap.forEach((val, key) => output.push(`${key}=${val}`));
 
+
+
     await client.scaleDownService(targetService);
 
 
     vscode.env.clipboard.writeText(output.join("\n"));
-    vscode.window.showInformationMessage("Copied to clipboard");
+    vscode.window.showInformationMessage("Your EnvVars were copied to clipboard");
 
     vscode.commands.executeCommand("kasten.open", [output.join("\n"), "text"]);
 

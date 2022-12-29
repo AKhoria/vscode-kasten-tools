@@ -44,7 +44,7 @@ export class KubctlClient {
         if (!envVars) {
             return new Map<string, string>(); //TODO handle
         }
-        return new Map<string, string>(envVars.filter(x => envVarNames.has(x[0])).map(x => [x[0], x[1]]));
+        return new Map<string, string>(envVars.filter(x => envVarNames.has(x[0]) && x[0]).map(x => [x[0], x[1]]));
 
     }
 
