@@ -3,7 +3,7 @@ import { KubctlClient } from '../clients/kubctlClient';
 import { SettingsClient } from '../clients/settingsClient';
 import { Service } from '../models/service';
 
-export function serviceForwardPallete(kubeConfigPath: string, kubectlClient: KubctlClient): (...args: any[]) => any {
+export function serviceForwardPallete(kubeConfigPath: string, kubectlClient: KubctlClient, cleanup: (d: () => Promise<void>) => void): (...args: any[]) => any {
     return async () => {
         const services = await kubectlClient.getServices();
 
@@ -12,7 +12,8 @@ export function serviceForwardPallete(kubeConfigPath: string, kubectlClient: Kub
         quickPick.items = services.map(service => ({ label: service.metadata.name }));
         quickPick.onDidChangeSelection(async selection => {
             if (selection[0]) {
-                portForward(kubectlClient, selection[0].label, services, kubeConfigPath);
+                let dispose = await portForward(kubectlClient, selection[0].label, services, kubeConfigPath);
+                cleanup(dispose);
                 quickPick.hide();
             }
         });
@@ -21,17 +22,17 @@ export function serviceForwardPallete(kubeConfigPath: string, kubectlClient: Kub
     };
 }
 
-async function portForward(client: KubctlClient, targetService: string, services: Service[], kubeConfigPath: string) {
+async function portForward(client: KubctlClient, targetService: string, services: Service[], kubeConfigPath: string): Promise<() => Promise<void>> {
     vscode.window.showInformationMessage("Starting port forwarding...");
     let settingsController = new SettingsClient(); //TODO  inject
     let localPort = settingsController.getSetting<number>("portForwardStartingPort") ?? 8001;
     let output = settingsController.getSetting<string[]>("extraEnvVars") ?? [];
 
 
-    var envVarMap = await client.getPodEnvVars(targetService);
+    let envVarMap = await client.getPodEnvVars(targetService);
 
     // TODO add to plugin's setting
-
+    let terminals: vscode.Terminal[] = [];
     services.forEach(srv => {
         if (srv.metadata.name !== targetService) {
             srv.spec.ports.forEach(portInfo => {
@@ -41,6 +42,7 @@ async function portForward(client: KubctlClient, targetService: string, services
                 };
                 terminalOptions.env['KUBECONFIG'] = kubeConfigPath;
                 let terminal = vscode.window.createTerminal(terminalOptions);
+                terminals.push(terminal);
                 terminal.hide();
                 terminal.sendText(`kubectl port-forward deployments/${srv.metadata.name} ${localPort}:${portInfo.port} -n kasten-io`);
 
@@ -58,18 +60,15 @@ async function portForward(client: KubctlClient, targetService: string, services
 
     envVarMap.forEach((val, key) => output.push(`${key}=${val}`));
 
-
-
-    await client.scaleDownService(targetService);
-
+    await client.scaleService(targetService, 0);
 
     vscode.env.clipboard.writeText(output.join("\n"));
     vscode.window.showInformationMessage("Your EnvVars were copied to clipboard");
-
     vscode.commands.executeCommand("kasten.open", [output.join("\n"), "text"]);
 
-    // vscode.window.activeTerminal?.sendText(`echo ${output.join(" \\ \n")}`);
-
-    return;
-
+    return async () => {
+        terminals.forEach(t => t.dispose());
+        await client.scaleService(targetService, 1); // TODO scale up the right amount
+        vscode.window.showInformationMessage(`Closed port-forwarding and scaled up service: ${targetService}`);
+    };
 }

@@ -24,8 +24,8 @@ export class KubctlClient {
         return await this.k.invokeCommand(command);
     }
 
-    async scaleDownService(targetService: string) {
-        await this.k.invokeCommand(`scale deploy ${targetService} --replicas=0`);
+    async scaleService(targetService: string, replica: number) {
+        await this.k.invokeCommand(`scale deploy ${targetService} --replicas=${replica}`);
     }
 
     async getPodEnvVars(targetService: string): Promise<Map<string, string>> {

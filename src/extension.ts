@@ -12,6 +12,9 @@ import { KubctlClient } from "./clients/kubctlClient";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
+
+let deactivateActions: (() => Promise<void>)[] = [];
+
 export async function activate(context: vscode.ExtensionContext) {
   const kubectl = await k8s.extension.kubectl.v1;
   const kubectlConfig = await k8s.extension.configuration.v1;
@@ -33,9 +36,14 @@ export async function activate(context: vscode.ExtensionContext) {
       },
       "kasten.addOpenArtifactWindow": addArtifactPallete(context),
       "kasten.portForwardServiceStart":
-        serviceForwardPallete(kubectlPath.pathType === "host" ? kubectlPath.hostPath : kubectlPath.wslPath, kubectlClient),
+        serviceForwardPallete(
+          kubectlPath.pathType === "host" ? kubectlPath.hostPath : kubectlPath.wslPath,
+          kubectlClient,
+          d => { deactivateActions.push(d); }),
       "kasten.portForwardServiceStop":
-        addArtifactPallete(context),
+        () => {
+          deactivateActions.forEach(async action => await action());
+        },
       "kasten.addArtifactsByFilter":
         async ({ key, value }) => {
           am.addFilter(key, value);
@@ -76,4 +84,8 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {
+  deactivateActions.forEach(async action => {
+    await action();
+  });
+}
