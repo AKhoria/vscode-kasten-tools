@@ -31,7 +31,6 @@ async function portForward(client: KubctlClient, targetService: string, services
 
     let envVarMap = await client.getPodEnvVars(targetService);
 
-    // TODO add to plugin's setting
     let terminals: vscode.Terminal[] = [];
     services.forEach(srv => {
         if (srv.metadata.name !== targetService) {

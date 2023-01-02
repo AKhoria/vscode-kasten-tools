@@ -36,7 +36,6 @@ export class KubctlClient {
         let output2 = await this.k.invokeCommand(`get pod --selector=${key}=${serviceInfo[key]} -o=jsonpath='{.items[0].spec.containers[0].env[*].name}'`);
         let envVarNames = new Set<string>(output2?.stdout?.split(" "));
 
-        // TODO extract logic
         let pod = await this.getHostByService(targetService);
         let command = `exec -it -n kasten-io "${pod}" -- bash -c "printenv"`;
         let res = await this.k.invokeCommand(command);
