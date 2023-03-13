@@ -31,6 +31,7 @@
           "type": "array",
           "default": [
             "POD_SERVICE_ACCOUNT=k10-k10",
+            "POD_NAMESPACE=kasten-io",
             "CRYPTO_SVC_SERVICE_PORT_EVENTS=8002"
           ],
           "description": "Extra env vars which will be added into port forward output"
