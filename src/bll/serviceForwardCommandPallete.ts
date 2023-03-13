@@ -27,7 +27,8 @@ async function portForward(client: KubctlClient, targetService: string, services
     let settingsController = new SettingsClient(); //TODO  inject
     let localPort = settingsController.getSetting<number>("portForwardStartingPort") ?? 8001;
     let output = settingsController.getSetting<string[]>("extraEnvVars") ?? [];
-
+    output.push(`KUBECONFIG=${kubeConfigPath}`)
+    output.push(`POD_NAME=${require("os").hostname()}`)
 
     let envVarMap = await client.getPodEnvVars(targetService);
 
