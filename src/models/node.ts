@@ -83,7 +83,8 @@ export class ArtifactNode extends Node {
   constructor(private k10Client: K10Client, private artifact: Artifact) {
     super(
       artifact.id,
-      (artifact?.meta?.manifest?.entries?.length ?? 0) === 0
+      ((artifact?.meta?.manifest?.entries?.length ?? 0) === 0 &&
+       !artifact?.meta?.manifest?.jobID)
         ? vscode.TreeItemCollapsibleState.None
         : vscode.TreeItemCollapsibleState.Collapsed
     );
@@ -96,16 +97,14 @@ export class ArtifactNode extends Node {
   }
 
   async getChildren(): Promise<Node[]> {
-    //TODO simplify
     let childrenIds =
       this.artifact?.meta?.manifest?.entries
-        ?.map((e) =>
+        ?.map(e =>
           e.artifactReference
-            ? [e.artifactReference.id]
+            ? e.artifactReference.id
             : e.artifactReferenceGroup
         )
-        ?.flatMap((a) => a) ?? []
-      ;
+        ?.flatMap((a) => a) ?? [];
 
     let childrenArts = await Promise.all(
       childrenIds.map((x) => this.k10Client.getArtifactById(x))
