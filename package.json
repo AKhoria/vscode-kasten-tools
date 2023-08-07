@@ -2,7 +2,7 @@
   "name": "vscode-kasten-tools",
   "displayName": "vscode-kasten-tools",
   "description": "VSCODE extension for kasten",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.70.0"
   },
