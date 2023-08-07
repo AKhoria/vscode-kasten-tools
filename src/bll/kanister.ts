@@ -22,8 +22,8 @@ export class KanisterManager {
             `apiVersion: cr.kanister.io/v1alpha1
 kind: Blueprint
 metadata:
-    generateName: ${name}-
-    namespace: ${this.namespace}
+  generateName: ${name}-
+  namespace: ${this.namespace}
 actions:`;
         await vscode.commands.executeCommand('kasten.open', [kanisterTmpl, "yaml", name]);
     }
@@ -36,10 +36,10 @@ actions:`;
             `apiVersion: cr.kanister.io/v1alpha1
 kind: ActionSet
 metadata:
-    generateName: ${name}-
-    namespace: ${this.namespace}
+  generateName: ${name}-
+  namespace: ${this.namespace}
 spec:
-    actions: 
+  actions: 
 `;
         await vscode.commands.executeCommand('kasten.open', [kanisterTmpl, "yaml", name]);
     }
@@ -149,31 +149,38 @@ export class ActionSetCompletionItemProvider implements vscode.CompletionItemPro
             return [];
         }
         const lineText = document.lineAt(position.line).text;
-        if (!lineText.endsWith("actions: ")) {
-            // return [];
+        let extraLine = false;
+        if (lineText.endsWith("actions: ")) {
+            extraLine = true;
         }
 
-        const bps = this.getBPs();
+        const bps = this.getBPs(extraLine);
         return bps;
     }
     resolveCompletionItem?(item: vscode.CompletionItem, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CompletionItem> {
         throw new Error("Method not implemented.");
     }
 
-    async getBPs(): Promise<vscode.CompletionItem[]> {
+    async getBPs(extraLine: boolean): Promise<vscode.CompletionItem[]> {
         const bps = await this.kubectlClient.getBlueprints();
         const items = bps.flatMap(x => x.actions.map(y => [x.name, y])).map(x => {
             const item = new vscode.CompletionItem(`${x[0]}: ${x[1]}`);
-            const str =` name: ${x[1]}
+            let str =`- name: ${x[1]}
   blueprint: ${x[0]}
   object:
-    kind: $0
-    name: $1
-    namespace: $2`;
+    kind: $1
+    name: $2
+    namespace: $3`;
+            if (extraLine){
+                str = `
+${str}`;
+            }
             item.insertText = new vscode.SnippetString(str);
+            item.kind = vscode.CompletionItemKind.Text;
 
             return item;
         });
+
         return items;
     }
 }
