@@ -10,9 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:kasten.view",
-    "onCommand:kasten.portForwardServiceStart",
-    "onCommand:kasten.portForwardServiceStop"
+    "onLanguage:yaml"
   ],
   "extensionDependencies": [
     "ms-kubernetes-tools.vscode-kubernetes-tools"
@@ -26,6 +24,21 @@
           "type": "number",
           "default": 8001,
           "description": "Port which will be the first for port forwarding."
+        },
+        "kasten.enableKanisterSupport":{
+          "type": "boolean",
+          "default": false,
+          "description": "Enable kanister syntax support."
+        },
+        "kasten.namespace":{
+          "type": "string",
+          "default": "kasten-io",
+          "description": "Namespace for kasten."
+        },
+        "kasten.kanNamespace":{
+          "type": "string",
+          "default": "kasten-io",
+          "description": "Namespace for kanister."
         },
         "kasten.extraEnvVars": {
           "type": "array",
@@ -85,6 +98,16 @@
       {
         "command": "kasten.decryptKey",
         "title": "Decrypt Key"
+      },
+      {
+        "command": "kasten.createBlueprint",
+        "category": "Kasten",
+        "title": "Create Blueprint"
+      },
+      {
+        "command": "kasten.createActionSet",
+        "category": "Kasten",
+        "title": "Create ActionSet"
       }
     ],
     "views": {
@@ -143,19 +166,20 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.70.0",
     "@types/glob": "^7.2.0",
     "@types/mocha": "^9.1.1",
     "@types/node": "16.x",
+    "@types/vscode": "^1.70.0",
     "@typescript-eslint/eslint-plugin": "^5.31.0",
     "@typescript-eslint/parser": "^5.31.0",
+    "@vscode/test-electron": "^2.1.5",
     "eslint": "^8.20.0",
     "glob": "^8.0.3",
     "mocha": "^10.0.0",
-    "typescript": "^4.7.4",
-    "@vscode/test-electron": "^2.1.5"
+    "typescript": "^4.7.4"
   },
   "dependencies": {
-    "vscode-kubernetes-tools-api": "^1.3.0"
+    "vscode-kubernetes-tools-api": "^1.3.0",
+    "yaml": "^2.3.1"
   }
 }

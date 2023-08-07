@@ -2,12 +2,14 @@ import { OutputChannel, window } from "vscode";
 import { KubectlV1 } from "vscode-kubernetes-tools-api";
 import { Policy } from "../models/policy";
 import { Service } from "../models/service";
+import { SettingsClient } from "./settingsClient";
 
 export class KubctlClient {
 
     terminal: OutputChannel | undefined;
+    settings: SettingsClient;
     constructor(private k: KubectlV1) {
-
+        this.settings = new SettingsClient();
     }
 
     async getHostByService(service: string): Promise<string> {
@@ -47,15 +49,15 @@ export class KubctlClient {
 
     }
 
-    async requestService<T>(service: string, path: string, method: string = "GET", body: any = null): Promise<T> {
+    async requestService<T>(service: string, path: string, method: string = "GET", body: any = null, port: number = 8000, protocol: string = "http", ns: string = "kasten-io"): Promise<T> {
         try {
             let podName = `${await this.getHostByService(service)}`;
-            let url = `http://localhost:8000/${path}`;
+            let url = `${protocol}://localhost:${port}/${path}`;
             let bodyCommand = "";
             if (body) {
-                bodyCommand = `-H "Content-Type: application/json" --data ` + `'${body}'`;
+                bodyCommand = `-X ${method} -H "Content-Type: application/json" -k --data ` + `'${body}'`;
             }
-            let command = `exec ${podName} -- curl ${bodyCommand} '${url}'`;
+            let command = `exec ${podName} -n ${ns} -- curl ${bodyCommand} '${url}'`;
             this.log(command);
             let output = await this.invokeCommand(command);
             return JSON.parse(output?.stdout ?? "");
@@ -76,6 +78,16 @@ export class KubctlClient {
         let command = "get --namespace kasten-io policies.config.kio.kasten.io  -o=json";
         let output = await this.k.invokeCommand(command);
         return JSON.parse(output?.stdout ?? "")?.["items"];
+    }
+
+    async getBlueprints(): Promise<{name: string, actions: string[]}[]> {
+        const ns = this.settings.getSetting<string>("kanNamespace");
+        let command = `get blueprints -o json -n ${ns}`;
+        let output = await this.k.invokeCommand(command);
+        const obj = JSON.parse(output?.stdout ?? "")?.["items"];
+        return obj.map((x: { metadata: { name: any; }; actions: {}; })=> {
+            return {name: x.metadata.name,actions: Object.keys(x.actions)};
+        });
     }
 
     log(command: string) {

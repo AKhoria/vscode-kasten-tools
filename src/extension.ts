@@ -9,6 +9,9 @@ import { ArtifactManager } from "./bll/artifactManager";
 import { serviceForwardPallete } from "./bll/serviceForwardCommandPallete";
 import { TreeProvider } from "./bll/treeProvider";
 import { KubctlClient } from "./clients/kubctlClient";
+import * as kanister from "./bll/kanister";
+import { SettingsClient } from "./clients/settingsClient";
+
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,11 +23,12 @@ export async function activate(context: vscode.ExtensionContext) {
   const kubectlConfig = await k8s.extension.configuration.v1;
 
   if (kubectl.available && kubectlConfig.available) {
-    let kubectlClient = new KubctlClient(kubectl.api);
-    let restClient = new K10Client(kubectlClient);
-    let kubectlPath = kubectlConfig.api.getKubeconfigPath();
-    let am = new ArtifactManager(restClient, kubectlClient);
-    let tree = new TreeProvider(am);
+    const kubectlClient = new KubctlClient(kubectl.api);
+    const restClient = new K10Client(kubectlClient);
+    const kubectlPath = kubectlConfig.api.getKubeconfigPath();
+    const am = new ArtifactManager(restClient, kubectlClient);
+    const kanClient = new kanister.KanisterManager(kubectlClient)
+    const tree = new TreeProvider(am);
 
 
     let commands: { [id: string]: (...args: any[]) => any; } = {
@@ -72,7 +76,21 @@ export async function activate(context: vscode.ExtensionContext) {
       "kasten.addArtifactByID": (id: string) => {
         am.addRootItems(id);
         tree.refresh();
-      }
+      },
+      "kasten.createBlueprint": async (key: any) => {
+        const fileName = await vscode.window.showInputBox({
+          value: 'blueprint',
+          placeHolder: 'Artifact ID',
+        });
+        await kanClient.createBlueprint(fileName);
+      },
+      "kasten.createActionSet": async (key: any) => {
+        const fileName = await vscode.window.showInputBox({
+          value: 'actionset',
+          placeHolder: 'Artifact ID',
+        });
+        await kanClient.createActionSet(fileName);
+      },
     };
 
     Object.keys(commands).forEach(commandName => {
@@ -80,6 +98,13 @@ export async function activate(context: vscode.ExtensionContext) {
       context.subscriptions.push(disposable);
     });
     context.subscriptions.push(vscode.window.registerTreeDataProvider("kasten.view", tree));
+
+    if (new SettingsClient().getSetting<boolean>("enableKanisterSupport") !== true) {
+      return;
+    }
+
+    // Kanister section
+    await kanClient.setupKanisterActivation(context);
   }
 }
 
