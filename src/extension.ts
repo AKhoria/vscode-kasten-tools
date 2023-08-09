@@ -73,6 +73,14 @@ export async function activate(context: vscode.ExtensionContext) {
           vscode.window.showErrorMessage("Failed decrypting key");
         }
       },
+      "kasten.deleteArt": async (key: any) => {
+        try {
+          await restClient.deleteArtifactById(key?.artifact?.id);
+          vscode.window.showInformationMessage(`Art ${key?.artifact?.id} was deleted, the tree won't be rebuit`);
+        } catch {
+          vscode.window.showErrorMessage("Failed to delete art");
+        }
+      },
       "kasten.addArtifactByID": (id: string) => {
         am.addRootItems(id);
         tree.refresh();

@@ -33,6 +33,10 @@ export class K10Client {
         return await this.kubectlClient.requestService(this.catalogName, `v0/artifacts/${id}`);
     }
 
+    async deleteArtifactById(id: string): Promise<Artifact> {
+        return await this.kubectlClient.requestService(this.catalogName, `v0/artifacts/${id}`, "DELETE");
+    }
+
     async listArtifacts(key: string, value: string): Promise<Artifact[]> {
         const artifacts: Artifact[] = await this.kubectlClient.requestService(this.catalogName, `v0/artifacts/search?key=${key}&value=${value}`);
         return artifacts.sort((a: Artifact, b: Artifact) => {

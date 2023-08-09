@@ -55,9 +55,9 @@ export class KubctlClient {
             let url = `${protocol}://localhost:${port}/${path}`;
             let bodyCommand = "";
             if (body) {
-                bodyCommand = `-X ${method} -H "Content-Type: application/json" -k --data ` + `'${body}'`;
+                bodyCommand = `-H "Content-Type: application/json" -k --data ` + `'${body}'`;
             }
-            let command = `exec ${podName} -n ${ns} -- curl ${bodyCommand} '${url}'`;
+            let command = `exec ${podName} -n ${ns} -- curl -X ${method}  ${bodyCommand} '${url}'`;
             this.log(command);
             let output = await this.invokeCommand(command);
             return JSON.parse(output?.stdout ?? "");
