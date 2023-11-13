@@ -7,6 +7,7 @@ VSCODE extention for Kasten. Allows request and manage K10 object using kubernet
 - Show list of policies with attached artifacts
 - Add custom artifact by ID/Filtering condition
 - Get JSON representation by clicking on the node
+- Debug service by port-forwarding all other services and generating env vars
 
 ## Requirements
 
